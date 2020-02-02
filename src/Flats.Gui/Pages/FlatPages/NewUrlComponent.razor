@@ -1,0 +1,25 @@
+﻿@using Flats.Gui.Data
+@using Flats.Gui.Entities
+@inject FlatSitesService FlatSitesService
+
+<input type="text" @bind="Url" />
+<button @onclick="AddUrl">+</button>
+
+@code {
+    [Parameter]
+    public Action<FlatSite> NewFlatSite { get; set; }
+
+    private string Url { get; set; }
+
+    private async Task AddUrl()
+    {
+        var flatSite = await FlatSitesService.GenerateFlatSiteAsync(Url);
+        if (flatSite is null)
+            return;
+
+        NewFlatSite?.Invoke(flatSite);
+
+        //flatSite.Flat = Flat;
+        //Flat.FlatSites.Add(flatSite);
+    }
+}

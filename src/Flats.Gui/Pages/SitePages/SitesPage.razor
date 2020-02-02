@@ -1,0 +1,90 @@
+﻿@page "/sites"
+
+@using Flats.Gui.Data
+@using Flats.Gui.Entities
+@inject SitesService SitesService
+@inject FlatSitesService FlatSitesService
+@inject NavigationManager NavigationManager
+
+<h1>Сайты</h1>
+
+@if (sites is null)
+{
+    <p>
+        Загрузка...
+    </p>
+}
+else
+{
+    <p>
+        <a href="" @onclick="CheckUrl">Test</a>
+    </p>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>
+                    Название
+                </th>
+                <th>
+                    Шаблон ссылки
+                </th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    <input @bind="newSite.Name" />
+                </td>
+                <td>
+                    <input @bind="newSite.UrlTemplate" />
+                </td>
+                <td>
+                    <a href="" @onclick="CreateAsync">Создать</a>
+                </td>
+            </tr>
+            @foreach (var site in sites)
+            {
+                <tr>
+                    <td>
+                        @site.Name
+                    </td>
+                    <td>
+                        @site.UrlTemplate
+                    </td>
+                    <td>
+                        <a href="" @onclick="@(async e => await Delete(site.Id))">Удалить</a>
+                        <a href="/sites/edit/@site.Id" style="display: block;">Редактировать</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private Site[] sites;
+    private Site newSite = new Site();
+
+    protected override async Task OnInitializedAsync()
+    {
+        sites = await SitesService.GetAsync();
+    }
+
+    private async Task Delete(string id)
+    {
+        await SitesService.DeleteAsync(id);
+        NavigationManager.NavigateTo("/sites");
+    }
+
+    private async Task CreateAsync()
+    {
+        await SitesService.CreateAsync(newSite);
+        NavigationManager.NavigateTo("/sites");
+    }
+
+    private async Task CheckUrl()
+    {
+        await FlatSitesService.GenerateFlatSiteAsync("https://www.avito.ru/tomsk/kvartiry/prodam/4-komnatnye/vtorichka");
+    }
+}

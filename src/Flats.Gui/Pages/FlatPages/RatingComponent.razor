@@ -1,0 +1,27 @@
+﻿<select @onchange="SetRating">
+    <option value="" selected="@(Rating is null)"></option>
+    @for (var i = 1; i <= 10; i++)
+    {
+        <option value="@i" selected="@(Rating == i)">@i</option>
+    }
+</select>
+
+@code {
+    [Parameter]
+    public int? Rating { get; set; }
+    [Parameter]
+    public Action<int?> OnSetRating { get; set; }
+
+    private void SetRating(ChangeEventArgs e)
+    {
+        if (string.IsNullOrWhiteSpace(e.Value.ToString()))
+        {
+            Rating = null;
+        }
+        else
+        {
+            Rating = int.Parse(e.Value.ToString());
+        }
+        OnSetRating?.Invoke(Rating);
+    }
+}

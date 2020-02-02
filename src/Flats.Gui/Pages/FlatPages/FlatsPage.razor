@@ -1,0 +1,157 @@
+﻿@page "/flats"
+
+@using Flats.Gui.Data
+@using Flats.Gui.Entities
+@using Flats.Gui.Pages.FlatPages
+@inject FlatsService FlatsService
+@inject FlatSitesService FlatSitesService
+@inject NavigationManager NavigationManager
+
+<h1>Квартиры</h1>
+
+@if (flats is null)
+{
+    <p>
+        Загрузка...
+    </p>
+}
+else
+{
+    <p>
+
+        <a href="/flats/edit">Добавить</a>
+    </p>
+    <table class="table">
+        <thead>
+            <tr>
+                <th style="width: 16%">
+                    Ссылки
+                    @if (EditingUrl)
+                    {
+                        <button @onclick="@(() => EditingUrl = false)">Отключить</button>
+                    }
+                    else
+                    {
+                        <button @onclick="@(() => EditingUrl = true)">Редактировать</button>
+                    }
+
+                </th>
+                <th>
+                    Адрес
+                </th>
+                <th>
+                    Этаж
+                </th>
+                <th>
+                    Оценка
+                    @if (EditingRating)
+                    {
+                        <button @onclick="@(() => EditingRating = false)">Отключить</button>
+                    }
+                    else
+                    {
+                        <button @onclick="@(() => EditingRating = true)">Редактировать</button>
+                    }
+                </th>
+                <th>
+                    Описание
+                </th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var flat in flats)
+            {
+                <tr>
+                    <td>
+                        @if (EditingUrl)
+                        {
+                            <NewUrlComponent NewFlatSite="@(async (flatSite) => await AddUrl(flat, flatSite))"></NewUrlComponent>
+                        }
+
+                        @foreach (var flatSite in flat.FlatSites)
+                        {
+                            <div style="display: block;">
+                                <a target="_blank" href="@CreateUrl(flatSite)">@flatSite.Site.Name</a>
+                                @if (EditingUrl)
+                                {
+                                    <button @onclick="@(() => RemoveUrl(flat, flatSite))">X</button>
+                                }
+                            </div>
+                        }
+
+                    </td>
+                    <td>
+                        @flat.Address
+                    </td>
+                    <td>
+                        @flat.Floor
+                    </td>
+                    <td>
+                        @if (EditingRating)
+                        {
+                            <RatingComponent Rating="flat.Rating" OnSetRating="@(async (rating) => await SetRatingAsync(flat, rating))"></RatingComponent>
+                        }
+                        else
+                        {
+                            @flat.Rating
+                        }
+                    </td>
+                    <td>
+                        @flat.Description
+                    </td>
+                    <td>
+                        <a href="" @onclick="@(e => Delete(flat.Id))">Удалить</a>
+                        <a href="/flats/edit/@flat.Id" style="display: block;">Редактировать</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private Flat[] flats;
+    private bool EditingUrl { get; set; } = false;
+    private bool EditingRating { get; set; } = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        flats = await FlatsService.GetAsync();
+    }
+
+    private async Task Delete(string id)
+    {
+        await FlatsService.DeleteAsync(id);
+        NavigationManager.NavigateTo("/flats");
+    }
+
+    private string CreateUrl(FlatSite flatSite)
+    {
+        return flatSite.Site.UrlTemplate.Replace("{id}", flatSite.ForeignKey);
+    }
+
+    private Task AddUrl(Flat flat, FlatSite flatSite)
+    {
+        flat.FlatSites.Add(flatSite);
+        return SaveFlatAsync(flat);
+    }
+
+    private Task RemoveUrl(Flat flat, FlatSite flatSite)
+    {
+        flat.FlatSites.Remove(flatSite);
+        return SaveFlatAsync(flat);
+    }
+
+    private async Task SaveFlatAsync(Flat flat)
+    {
+        await FlatsService.UpdateAsync(flat);
+        StateHasChanged();
+    }
+
+    private Task SetRatingAsync(Flat flat, int? rating)
+    {
+        flat.Rating = rating;
+        return SaveFlatAsync(flat);
+    }
+}

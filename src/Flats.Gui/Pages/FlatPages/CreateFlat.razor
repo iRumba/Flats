@@ -1,0 +1,86 @@
+﻿@page "/flats/edit"
+@page "/flats/edit/{id}"
+
+@using Flats.Gui.Data
+@using Flats.Gui.Entities
+@inject FlatsService FlatsService
+@inject NavigationManager NavigationManager
+
+@if (Flat is null)
+{
+    <p>
+        Загрузка...
+    </p>
+}
+else
+{
+    @if (Id is null)
+    {
+        <h3>Добавление квартиры</h3>
+    }
+    else
+    {
+        <h3>Редактирование квартиры</h3>
+    }
+    <form>
+        <p>
+            <span style="display: block;">Ссылка:</span>
+            <input type="url" @bind="Flat.Url" />
+        </p>
+        <p>
+            <span style="display: block;">Адрес:</span>
+            <input type="text" @bind="Flat.Address" />
+        </p>
+        <p>
+            <span style="display: block;">Этаж:</span>
+            <input type="number" @bind="Flat.Floor" />
+        </p>
+        <p>
+            <span style="display: block;">Телефон:</span>
+            <input type="tel" @bind="Flat.PhoneNumber" />
+        </p>
+        <p>
+            <span style="display: block;">Описание:</span>
+            <textarea rows="5" @bind="Flat.Description" />
+        </p>
+        <p>
+            <button type="button" @onclick="Edit">Сохранить</button>
+        </p>
+
+    </form>
+}
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    private Flat Flat { get; set; }
+    private string Url { get; set; }
+    private string Address { get; set; }
+    private int? Floor { get; set; }
+    private string Description { get; set; }
+    private string PhoneNumber { get; set; }
+
+    private async Task Edit()
+    {
+        if (Flat.Id is null)
+        {
+            await FlatsService.CreateAsync(Flat);
+        }
+        else
+        {
+            await FlatsService.UpdateAsync(Flat);
+        }
+        NavigationManager.NavigateTo("Flats");
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id is null)
+            Flat = new Flat();
+        else
+        {
+            Flat = await FlatsService.GetAsync(Id);
+        }
+    }
+}
